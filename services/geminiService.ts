@@ -2,10 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Subject, ComparisonResult } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const analyzeLectures = async (subject: Subject): Promise<ComparisonResult | null> => {
   if (subject.lectures.length < 1) return null;
+
+  // API 인스턴스를 호출 시점에 생성하여 process.env.API_KEY 로딩 유연성 확보
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const prompt = `
     다음은 '${subject.name}' 과목에 대한 여러 강좌 정보입니다. 
@@ -29,7 +30,6 @@ export const analyzeLectures = async (subject: Subject): Promise<ComparisonResul
   `;
 
   try {
-    // Fix: Using gemini-3-pro-preview for complex reasoning task (multi-lecture comparative analysis)
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: prompt,
@@ -57,6 +57,7 @@ export const analyzeLectures = async (subject: Subject): Promise<ComparisonResul
       },
     });
 
+    if (!response.text) return null;
     return JSON.parse(response.text.trim());
   } catch (error) {
     console.error("Gemini Analysis Error:", error);

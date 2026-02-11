@@ -12,13 +12,40 @@
     <style>
         body { font-family: 'Pretendard', sans-serif; margin: 0; padding: 0; }
         #root { min-height: 100vh; }
+        .boot-error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+            color: #ef4444;
+            font-family: sans-serif;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
     <script>
-        // GitHub Pages 등 정적 환경에서 process.env 참조 에러 방지
+        // 전역 에러 핸들러: 화이트 스크린 방지 및 디버깅 도움
+        window.addEventListener('error', function(event) {
+            console.error("Runtime Error:", event.error);
+            const root = document.getElementById('root');
+            if (root && (root.innerHTML === '' || root.querySelector('.loading-screen'))) {
+                root.innerHTML = `
+                    <div class="boot-error">
+                        <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 10px;">앱을 실행하지 못했습니다.</h1>
+                        <p style="color: #64748b; margin-bottom: 20px;">${event.message}</p>
+                        <button onclick="location.reload()" style="padding:12px 24px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">새로고침</button>
+                    </div>
+                `;
+            }
+        });
+
+        // GitHub Pages 등 정적 환경에서 process.env 참조 에러 방지용 심(shim)
         window.process = {
             env: {
                 NODE_ENV: 'production',
-                API_KEY: '' // 환경 변수는 빌드 타임이나 런타임 주입을 가정함
+                API_KEY: '' // API_KEY는 외부 환경에서 주입됩니다.
             }
         };
     </script>
@@ -30,15 +57,26 @@
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "@google/genai": "https://esm.sh/@google/genai@1.40.0",
     "lucide-react": "https://esm.sh/lucide-react@0.563.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
 </head>
 <body class="bg-slate-50 text-slate-900">
-    <div id="root"></div>
-    <!-- 앱 진입점 로드 -->
+    <div id="root">
+        <!-- 앱이 로드되기 전 표시될 초기 로딩 화면 -->
+        <div class="loading-screen" style="display: flex; align-items: center; justify-content: center; height: 100vh; color: #6366f1; font-weight: bold; background: white;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                <div style="width: 48px; height: 48px; border: 5px solid #f1f5f9; border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div style="text-align: center;">
+                    <div style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #1e293b;">UniCourse Master 26</div>
+                    <div style="font-size: 14px; font-weight: 500; color: #94a3b8;">데이터를 불러오는 중...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 앱 진입점 -->
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>
