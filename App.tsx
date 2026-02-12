@@ -132,11 +132,44 @@ const App: React.FC = () => {
   };
 
   const toggleLectureInTimetable = (lectureId: string) => {
+    // 이미 시간표에 있는 경우 제외
     if (timetableLectureIds.includes(lectureId)) {
       setTimetableLectureIds(timetableLectureIds.filter(id => id !== lectureId));
-    } else {
-      setTimetableLectureIds([...timetableLectureIds, lectureId]);
+      return;
     }
+
+    // 추가하려는 강좌 객체 찾기
+    let targetLecture: Lecture | undefined;
+    subjects.forEach(s => {
+      const l = s.lectures.find(lec => lec.id === lectureId);
+      if (l) targetLecture = l;
+    });
+
+    if (!targetLecture) return;
+
+    // 현재 시간표에 등록된 강좌들의 모든 시간 슬롯 수집
+    const currentSlots = new Set<string>();
+    subjects.forEach(s => {
+      s.lectures.forEach(l => {
+        if (timetableLectureIds.includes(l.id)) {
+          l.timeSlots.forEach(slot => {
+            currentSlots.add(`${slot.day}-${slot.period}`);
+          });
+        }
+      });
+    });
+
+    // 겹치는 시간이 있는지 확인
+    const hasOverlap = targetLecture.timeSlots.some(slot => 
+      currentSlots.has(`${slot.day}-${slot.period}`)
+    );
+
+    if (hasOverlap) {
+      alert("그 시간에 이미 다른 수업이 존재합니다");
+      return;
+    }
+
+    setTimetableLectureIds([...timetableLectureIds, lectureId]);
   };
 
   const resetLectureForm = () => {
