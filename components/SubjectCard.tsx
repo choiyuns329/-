@@ -8,6 +8,7 @@ interface SubjectCardProps {
   timetableLectureIds: string[];
   onToggleTimetable: (lectureId: string) => void;
   onAddLecture: (subjectId: string) => void;
+  onEditLecture: (subjectId: string, lecture: Lecture) => void;
   onDeleteSubject: (subjectId: string) => void;
   onDeleteLecture: (subjectId: string, lectureId: string) => void;
   onAnalyze: (subject: Subject) => void;
@@ -18,6 +19,7 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
   timetableLectureIds,
   onToggleTimetable,
   onAddLecture, 
+  onEditLecture,
   onDeleteSubject, 
   onDeleteLecture, 
   onAnalyze 
@@ -59,12 +61,22 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
                   key={lecture.id} 
                   className={`p-4 rounded-xl border transition-all relative group ${isInTimetable ? 'bg-indigo-50/30 border-indigo-200 ring-1 ring-indigo-200' : 'bg-slate-50/50 border-slate-100'}`}
                 >
-                  <button 
-                    onClick={() => onDeleteLecture(subject.id, lecture.id)}
-                    className="absolute top-2 right-2 p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    ✕
-                  </button>
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button 
+                      onClick={() => onEditLecture(subject.id, lecture)}
+                      className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                      title="수정"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button 
+                      onClick={() => onDeleteLecture(subject.id, lecture.id)}
+                      className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
+                  </div>
                   
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>

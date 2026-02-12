@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [isSubjectModalOpen, setIsSubjectModalOpen] = useState(false);
   const [isLectureModalOpen, setIsLectureModalOpen] = useState(false);
   const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
+  const [editingLectureId, setEditingLectureId] = useState<string | null>(null);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<ComparisonResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -70,27 +71,64 @@ const App: React.FC = () => {
     setIsSubjectModalOpen(false);
   };
 
-  const handleAddLecture = () => {
+  const handleSaveLecture = () => {
     if (!activeSubjectId) return;
-    const lecture: Lecture = {
-      id: Date.now().toString(),
-      professor: newProf || '교수 미정',
-      classroom: newRoom || '미정',
-      type: newType,
-      remoteRatio: newRemote,
-      evaluation: { ...newEval },
-      timeSlots: [...selectedSlots],
-      memo: '',
-      review: newReview,
-      color: SUBJECT_COLORS[subjects.findIndex(s => s.id === activeSubjectId) % SUBJECT_COLORS.length]
-    };
 
-    setSubjects(subjects.map(s => 
-      s.id === activeSubjectId ? { ...s, lectures: [...s.lectures, lecture] } : s
-    ));
+    if (editingLectureId) {
+      // Update existing lecture
+      setSubjects(subjects.map(s => {
+        if (s.id === activeSubjectId) {
+          return {
+            ...s,
+            lectures: s.lectures.map(l => l.id === editingLectureId ? {
+              ...l,
+              professor: newProf || '교수 미정',
+              classroom: newRoom || '미정',
+              type: newType,
+              remoteRatio: newRemote,
+              evaluation: { ...newEval },
+              timeSlots: [...selectedSlots],
+              review: newReview,
+            } : l)
+          };
+        }
+        return s;
+      }));
+    } else {
+      // Create new lecture
+      const lecture: Lecture = {
+        id: Date.now().toString(),
+        professor: newProf || '교수 미정',
+        classroom: newRoom || '미정',
+        type: newType,
+        remoteRatio: newRemote,
+        evaluation: { ...newEval },
+        timeSlots: [...selectedSlots],
+        memo: '',
+        review: newReview,
+        color: SUBJECT_COLORS[subjects.findIndex(s => s.id === activeSubjectId) % SUBJECT_COLORS.length]
+      };
+
+      setSubjects(subjects.map(s => 
+        s.id === activeSubjectId ? { ...s, lectures: [...s.lectures, lecture] } : s
+      ));
+    }
     
     resetLectureForm();
     setIsLectureModalOpen(false);
+  };
+
+  const openEditLectureModal = (subjectId: string, lecture: Lecture) => {
+    setActiveSubjectId(subjectId);
+    setEditingLectureId(lecture.id);
+    setNewProf(lecture.professor);
+    setNewRoom(lecture.classroom);
+    setNewType(lecture.type);
+    setNewRemote(lecture.remoteRatio);
+    setNewEval({ ...lecture.evaluation });
+    setNewReview(lecture.review || '');
+    setSelectedSlots([...lecture.timeSlots]);
+    setIsLectureModalOpen(true);
   };
 
   const toggleLectureInTimetable = (lectureId: string) => {
@@ -102,6 +140,7 @@ const App: React.FC = () => {
   };
 
   const resetLectureForm = () => {
+    setEditingLectureId(null);
     setNewProf('');
     setNewRoom('');
     setNewType(LectureType.OFFLINE);
@@ -151,7 +190,7 @@ const App: React.FC = () => {
         </div>
 
         <button 
-          onClick={() => setIsSubjectModalOpen(true)}
+          onClick={() => { resetLectureForm(); setIsSubjectModalOpen(true); }}
           className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-200"
         >
           <span>+ 새 과목 등록</span>
@@ -178,11 +217,14 @@ const App: React.FC = () => {
                   subject={subject} 
                   timetableLectureIds={timetableLectureIds}
                   onToggleTimetable={toggleLectureInTimetable}
-                  onAddLecture={(id) => { setActiveSubjectId(id); setIsLectureModalOpen(true); }}
+                  onAddLecture={(id) => { resetLectureForm(); setActiveSubjectId(id); setIsLectureModalOpen(true); }}
+                  onEditLecture={openEditLectureModal}
                   onDeleteSubject={(id) => confirm('과목을 삭제할까요?') && setSubjects(subjects.filter(s => s.id !== id))}
                   onDeleteLecture={(sId, lId) => {
-                    setSubjects(subjects.map(s => s.id === sId ? { ...s, lectures: s.lectures.filter(l => l.id !== lId) } : s));
-                    setTimetableLectureIds(timetableLectureIds.filter(id => id !== lId));
+                    if (confirm('강좌를 삭제할까요?')) {
+                      setSubjects(subjects.map(s => s.id === sId ? { ...s, lectures: s.lectures.filter(l => l.id !== lId) } : s));
+                      setTimetableLectureIds(timetableLectureIds.filter(id => id !== lId));
+                    }
                   }}
                   onAnalyze={async (s) => {
                     setIsAnalyzing(true); setIsAnalysisModalOpen(true);
@@ -233,16 +275,18 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Add Lecture */}
+      {/* Modal: Add/Edit Lecture */}
       {isLectureModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto">
           <div className="bg-white rounded-[2rem] w-full max-w-4xl p-8 shadow-2xl my-8">
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">상세 강좌 정보 입력</h3>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">
+                  {editingLectureId ? '강좌 정보 수정' : '상세 강좌 정보 입력'}
+                </h3>
                 <p className="text-slate-400 text-sm font-medium">강의 시간과 평가 방식을 정확히 입력해주세요.</p>
               </div>
-              <button onClick={() => setIsLectureModalOpen(false)} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors">✕</button>
+              <button onClick={() => { setIsLectureModalOpen(false); resetLectureForm(); }} className="p-2 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors">✕</button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -355,13 +399,13 @@ const App: React.FC = () => {
                 </section>
                 
                 <div className="mt-4 flex gap-4">
-                  <button onClick={() => setIsLectureModalOpen(false)} className="flex-1 py-4 text-slate-400 font-bold text-sm">취소</button>
+                  <button onClick={() => { setIsLectureModalOpen(false); resetLectureForm(); }} className="flex-1 py-4 text-slate-400 font-bold text-sm">취소</button>
                   <button 
-                    onClick={handleAddLecture}
+                    onClick={handleSaveLecture}
                     disabled={totalEval !== 100}
                     className={`flex-[2] py-4 text-white rounded-2xl font-black text-sm transition-all shadow-xl ${totalEval === 100 ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-200' : 'bg-slate-200 cursor-not-allowed text-slate-400'}`}
                   >
-                    강좌 정보 등록 완료
+                    {editingLectureId ? '변경사항 저장' : '강좌 정보 등록 완료'}
                   </button>
                 </div>
               </div>
