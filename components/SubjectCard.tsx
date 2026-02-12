@@ -77,6 +77,17 @@ const SubjectCard: React.FC<SubjectCardProps> = ({
                     </div>
                   </div>
 
+                  {lecture.review && (
+                    <div className="mb-3 p-3 bg-white border border-slate-100 rounded-lg">
+                      <p className="text-[10px] text-indigo-400 uppercase font-bold mb-1 flex items-center gap-1">
+                        <span>💬</span> 강의평
+                      </p>
+                      <p className="text-[11px] text-slate-600 leading-relaxed font-medium line-clamp-2 italic">
+                        "{lecture.review}"
+                      </p>
+                    </div>
+                  )}
+
                   <div className="mb-3">
                     <p className="text-[10px] text-slate-400 uppercase font-semibold mb-1">강의 시간</p>
                     <div className="flex flex-wrap gap-1">

@@ -45,6 +45,7 @@ export interface Lecture {
   remoteRatio: RemoteRatio;
   timeSlots: TimeSlot[];
   memo: string;
+  review?: string; // 서술형 강의평 추가
   color?: string; // 시간표 표시용 색상
 }
 

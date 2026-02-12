@@ -27,6 +27,7 @@ const App: React.FC = () => {
   const [newRoom, setNewRoom] = useState('');
   const [newType, setNewType] = useState<LectureType>(LectureType.OFFLINE);
   const [newRemote, setNewRemote] = useState<RemoteRatio>(RemoteRatio.ZERO);
+  const [newReview, setNewReview] = useState('');
   const [newEval, setNewEval] = useState({
     attendance: 10, midterm: 30, final: 40, assignment: 20, attitude: 0, quiz: 0, others: 0
   });
@@ -80,6 +81,7 @@ const App: React.FC = () => {
       evaluation: { ...newEval },
       timeSlots: [...selectedSlots],
       memo: '',
+      review: newReview,
       color: SUBJECT_COLORS[subjects.findIndex(s => s.id === activeSubjectId) % SUBJECT_COLORS.length]
     };
 
@@ -104,6 +106,7 @@ const App: React.FC = () => {
     setNewRoom('');
     setNewType(LectureType.OFFLINE);
     setNewRemote(RemoteRatio.ZERO);
+    setNewReview('');
     setNewEval({ attendance: 10, midterm: 30, final: 40, assignment: 20, attitude: 0, quiz: 0, others: 0 });
     setSelectedSlots([]);
   };
@@ -314,7 +317,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Right Side: Evaluation */}
-              <div>
+              <div className="space-y-6">
                 <section>
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">평가 방식 비율 (%)</h4>
@@ -340,8 +343,18 @@ const App: React.FC = () => {
                     ))}
                   </div>
                 </section>
+
+                <section>
+                  <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-4">교수님 및 강의 스타일 (서술형)</h4>
+                  <textarea 
+                    value={newReview}
+                    onChange={(e) => setNewReview(e.target.value)}
+                    placeholder="예: 학점은 짜지만 강의력이 좋으심, 과제는 팀플 위주 등..."
+                    className="w-full h-32 px-4 py-3 rounded-2xl bg-slate-50 text-slate-900 border border-slate-200 focus:ring-4 focus:ring-indigo-50 outline-none transition-all text-sm font-medium resize-none"
+                  />
+                </section>
                 
-                <div className="mt-10 flex gap-4">
+                <div className="mt-4 flex gap-4">
                   <button onClick={() => setIsLectureModalOpen(false)} className="flex-1 py-4 text-slate-400 font-bold text-sm">취소</button>
                   <button 
                     onClick={handleAddLecture}

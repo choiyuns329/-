@@ -10,9 +10,11 @@ export const analyzeLectures = async (subject: Subject): Promise<ComparisonResul
 
   const prompt = `
     다음은 '${subject.name}' 과목에 대한 여러 강좌 정보입니다. 
-    각 강좌의 교수님, 강의실, 강의 유형, 평가 비율, 원격 비율을 분석하여 
+    각 강좌의 교수님, 강의실, 강의 유형, 평가 비율, 원격 비율 및 서술형 강의평을 분석하여 
     26학번 새내기가 어떤 강의를 선택하면 좋을지 심층 비교 분석을 해주세요.
     
+    서술형 강의평에는 실제 학생들의 의견이 포함되어 있으니, 이를 적극적으로 반영하여 강좌별 장단점을 도출하세요.
+
     데이터: ${JSON.stringify(subject.lectures)}
 
     결과는 반드시 다음 JSON 형식을 따라야 합니다:
